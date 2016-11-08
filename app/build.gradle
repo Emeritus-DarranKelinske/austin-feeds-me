@@ -10,11 +10,11 @@ buildscript {
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
 apply plugin: 'io.fabric'
+apply plugin: 'jacoco'
 
 repositories {
     maven { url 'https://maven.fabric.io/public' }
 }
-
 
 Properties props = new Properties()
 props.load(new FileInputStream(file(project.property("austinfeedsme.properties"))))
@@ -33,16 +33,17 @@ android {
                                 fabricApiKey: props['fabric']]
         multiDexEnabled false
 
-        versionCode 6
-        versionName "1.6"
-
+        versionCode 7
+        versionName "1.7"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
 
     buildTypes {
-
+        debug {
+            testCoverageEnabled true    //coverage for instrumentation tests
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
@@ -130,6 +131,32 @@ dependencies {
     apt 'org.parceler:parceler:1.1.6'
 
 }
+
+//merges test report from instrumentation and unit tests
+task jacocoTestReport(type: JacocoReport, dependsOn: 'testDebugUnitTest') {
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+
+    jacocoClasspath = configurations['androidJacocoAnt']
+
+    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*',
+                      '**/*InjectAdapter*.*',
+                      '**/*StaticInjection*.*',
+                      '**/*ModuleAdapter*.*',
+                      '**/*$ViewBinder*.*',
+                      '**/*$Parcelable*.*']
+    def debugTree = fileTree(dir: "${buildDir}/intermediates/classes/debug", excludes: fileFilter)
+    def mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories = files([mainSrc])
+    classDirectories = files([debugTree])
+    def instrumentationCoverage = fileTree(dir: "${buildDir}/outputs/code-coverage/connected", include: "*.ec")
+    executionData = files(["${buildDir}/jacoco/testDebugUnitTest.exec", instrumentationCoverage])
+}
+
 
 // Needed for Firebase
 apply plugin: 'com.google.gms.google-services'

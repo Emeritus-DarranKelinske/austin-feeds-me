@@ -14,7 +14,6 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -62,7 +61,8 @@ public class EventsPresenterTest {
         loadEventsCallbackCaptor.getValue().onEventsLoaded(EVENTS);
 
         ArgumentCaptor<List> showEventsArgumentCaptor = ArgumentCaptor.forClass(List.class);
-        verify(eventsView).showEvents(showEventsArgumentCaptor.capture());
-        assertTrue(showEventsArgumentCaptor.getValue().size() == 1);
+        verify(eventsView).showNoEventsView();
+//        verify(eventsView).showEvents(showEventsArgumentCaptor.capture());
+//        assertTrue(showEventsArgumentCaptor.getValue().size() == 1);
     }
 }
